@@ -135,6 +135,7 @@ export default function ChatBox() {
       showNotification('Sending on-chain...', 'info');
       await sendMessage(provider, recipient, publicKey, ipfsUrl);
       showNotification('Message sent!', 'success');
+      setIsSending(false);
       setMessage('');
       setFile(null);
       setSelectedFileName('');
@@ -346,7 +347,7 @@ export default function ChatBox() {
   }, []);
 
   return (
-    <div className="min-h-screen text-[#0a1930] font-mono bg-gradient-to-br from-[#e6e9ef] to-[#f0f4f8] relative">
+    <div className="min-h-screen text-[#0a1930] font-mono bg-gradient-to-br from-[#e6e9ef] to-[#f0f4f8] relative overflow-hidden scroll-smooth">
       <style>{`
         .sparkle {
           position: fixed;
@@ -399,9 +400,9 @@ export default function ChatBox() {
           }
         }
       `}</style>
-
+  
       {/* Notifications */}
-      <div className="fixed top-4 right-4 z-[1000] space-y-2">
+      <div className="fixed top-4 right-4 z-[1000] flex flex-col gap-3 w-full max-w-xs sm:max-w-sm md:max-w-md">
         {notifications.map((notification) => (
           <Notification
             key={notification.id}
@@ -411,21 +412,19 @@ export default function ChatBox() {
               setNotifications((prev) => prev.filter((n) => n.id !== notification.id))
             }
           />
-        ))
-        }
+        ))}
       </div>
-
+  
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%230a1930%22 fill-opacity=%220.05%22%3E%3Cpath d=%22M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30v4h-4v2h4v4h2v-4h4V8h-4V4h-2zm-12 8h-2v4h-4v2h4v4h2v-4h4v-2h-4v-4zm-6 22h4v-4h2v4h4v2h-4v4h-2v-4H8v-2h4v-4z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] bg-repeat z-0" />
-
+  
       {/* Instructions Modal */}
       {showInstructions && (
-        <div className="fixed inset-0 z-[1000] bg-black/50 flex items-center justify-center">
-          <div className="bg-white w-[90%] max-w-[800px] max-h-[90vh] rounded-2xl shadow-2xl p-8 overflow-y-auto border border-[#e6e9ef]/70 animate-slide-in relative">
+        <div className="fixed inset-0 z-[1000] bg-black/40 flex items-center justify-center px-4">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-6 sm:p-8 overflow-y-auto max-h-[90vh] border border-[#e6e9ef] animate-slide-in relative">
             <button
               onClick={toggleInstructions}
               className="absolute top-4 right-4 text-2xl text-[#0a1930] hover:text-red-500 font-bold cursor-pointer"
-              title="Close"
               aria-label="Close instructions"
             >
               ×
@@ -438,11 +437,11 @@ export default function ChatBox() {
           </div>
         </div>
       )}
-
+  
       {/* Main Layout */}
-      <div className="relative z-10 flex flex-col md:flex-row h-screen pt-16 md:pt-0">
+      <div className="relative z-10 flex flex-col md:flex-row h-screen pt-20 md:pt-0">
         {/* Sidebar */}
-        <aside className="w-full md:w-1/4 bg-gradient-to-b from-white/95 to-[#f0f4f8]/95 border-r border-[#e6e9ef]/50 p-6 overflow-y-auto backdrop-blur-xl shadow-xl">
+        <aside className="w-full md:w-[300px] bg-white/80 border-r border-[#dce3ed] p-4 sm:p-6 overflow-y-auto shadow-lg backdrop-blur-md transition-all duration-300">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-semibold flex items-center gap-3 text-[#0a1930]">
               <Users className="w-6 h-6 text-[#102841]" /> Chats
@@ -457,66 +456,40 @@ export default function ChatBox() {
           </div>
           <InitUserProfilePage onSelectReceiver={handleSelectReceiver} />
         </aside>
-
+  
         {/* Main Chat Area */}
-        <main className="w-full md:w-3/4 flex flex-col bg-gradient-to-b from-white/95 to-[#f0f4f8]/95 backdrop-blur-xl">
+        <main className="flex-1 flex flex-col bg-white/80 backdrop-blur-md shadow-inner">
           {/* Header */}
-          <div className="p-6 border-b border-[#e6e9ef]/50 flex justify-between items-center bg-white/80 shadow-sm">
-            <h1 className="text-2xl font-bold flex items-center gap-3 text-[#0a1930] tracking-wider">
+          <div className="p-4 sm:p-6 border-b border-[#e6e9ef]/50 flex justify-between items-center bg-white/90 shadow-sm">
+            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-3 text-[#0a1930] tracking-wider">
               ▂▃▅▇█▓▒░𝙳𝚎𝙲𝚑𝚊𝚝░▒▓█▇▅▃▂
             </h1>
-
-            {/* Right section with Wallet button and logo */}
             <div className="flex items-center gap-3">
-              <img
-                src={logo.src}
-                alt="Logo"
-                className="w-10 h-10 ml-2"
-              />
-              <WalletMultiButton className="!bg-gradient-to-br !from-[#0a1930] !to-[#102841] hover:!from-[#102841] hover:!to-[#1a3557] !text-white !rounded-xl !px-6 !py-3 transition-all transform hover:scale-105 !shadow-md" />
+              <img src={logo.src} alt="Logo" className="w-8 h-8 sm:w-10 sm:h-10" />
+              <WalletMultiButton className="!bg-gradient-to-br !from-[#0a1930] !to-[#102841] hover:!from-[#102841] hover:!to-[#1a3557] !text-white !rounded-xl !px-4 sm:!px-6 !py-2 sm:!py-3 transition-all transform hover:scale-105 !shadow-md" />
             </div>
           </div>
-
+  
           {/* Recipient */}
-          <div className="px-6 py-4 border-b border-[#e6e9ef]/50">
-            <p className="w-full bg-gradient-to-r from-[#f0f4f8]/80 to-[#e6e9ef]/80 text-[#0a1930] border border-[#e6e9ef]/50 rounded-xl px-4 py-3 shadow-sm truncate font-medium text-sm transition-all hover:shadow-md">
+          <div className="px-4 sm:px-6 py-3 border-b border-[#e6e9ef]/50">
+            <p className="w-full bg-gradient-to-r from-[#f0f4f8]/80 to-[#e6e9ef]/80 text-[#0a1930] border border-[#e6e9ef]/50 rounded-xl px-4 py-2 sm:py-3 shadow-sm truncate font-medium text-sm transition-all hover:shadow-md">
               {recipientKey || 'Select a recipient to start chatting'}
             </p>
           </div>
-
+  
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6 animate-fade-in">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 animate-fade-in">
             {messages.length === 0 ? (
-              <p className="text-center text-gray-500 opacity-60 text-lg font-medium">
+              <p className="text-center text-gray-500 opacity-60 text-base sm:text-lg font-medium">
                 No messages yet. Start chatting!
               </p>
             ) : (
               messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex ${msg.isSender ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[85%] md:max-w-[65%] px-5 py-3 rounded-2xl shadow-lg text-sm ${msg.isSender
-                      ? 'bg-gradient-to-br from-[#0a1930] to-[#102841] text-white'
-                      : 'bg-gradient-to-r from-[#f0f4f8] to-[#e6e9ef] text-[#0a1930]'
-                      } hover:shadow-xl transition-all`}
-                  >
-                    {/* File preview */}
+                <div key={idx} className={`flex ${msg.isSender ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] sm:max-w-[70%] md:max-w-[60%] px-5 py-3 rounded-2xl shadow-md text-sm transition-all duration-200 ${msg.isSender ? 'bg-gradient-to-br from-[#0a1930] to-[#102841] text-white' : 'bg-gradient-to-r from-[#f0f4f8] to-[#e6e9ef] text-[#0a1930]'}`}>
                     {msg.image && (
                       <div className="mb-3 relative group">
-                        {msg.image.match(/\.(jpeg|jpg|png|gif)$/i) ? (
-                          <p></p>
-                          // <img
-                          //   src={msg.image}
-                          //   alt="Attachment"
-                          //   className="max-w-full h-auto rounded-xl shadow-sm"
-                          //   onError={(e) => {
-                          //     e.currentTarget.src = '/fallback-image.png';
-                          //     e.currentTarget.alt = 'Failed to load image';
-                          //   }}
-                          // />
-                        ) : (
+                        {msg.image.match(/\.(jpeg|jpg|png|gif)$/i) ? null : (
                           <div className="flex items-center gap-3 bg-[#f0f4f8]/50 p-3 rounded-xl">
                             <FileText className="w-6 h-6 text-[#102841]" />
                             <span className="text-sm font-medium truncate">
@@ -534,9 +507,7 @@ export default function ChatBox() {
                         </button>
                       </div>
                     )}
-                    {/* Message Text */}
                     <pre className="whitespace-pre-wrap break-words text-[14px] leading-relaxed">{msg.text}</pre>
-                    {/* Timestamp */}
                     <div className="text-xs text-right mt-2 opacity-80 font-medium">
                       {new Date(msg.timestamp.toNumber() * 1000).toLocaleTimeString([], {
                         hour: '2-digit',
@@ -549,21 +520,20 @@ export default function ChatBox() {
             )}
             <div ref={messagesEndRef} />
           </div>
-
-          {/* Input */}
-          <div className="px-6 py-5 border-t border-[#e6e9ef]/50 flex gap-3 items-center bg-gradient-to-t from-white/95 to-[#f0f4f8]/95 shadow-inner">
-            {/* Attach */}
+  
+          {/* Input Section */}
+          <div className="flex flex-wrap gap-3 items-center px-4 sm:px-6 py-4 border-t border-[#e6e9ef]/50 bg-gradient-to-t from-white/95 to-[#f0f4f8]/95 shadow-inner">
             <div className="relative group">
               <button
                 type="button"
                 onClick={triggerFileInput}
-                className="p-3 text-[#0a1930] hover:text-[#102841] rounded-full hover:bg-gradient-to-r from-[#f0f4f8] to-[#e6e9ef] transition-all cursor-pointer hover:shadow-md"
+                className="p-2 sm:p-3 text-[#0a1930] hover:text-[#102841] rounded-full hover:bg-[#e6e9ef]/50 transition-all"
                 title="Attach file"
               >
                 <Paperclip size={22} />
               </button>
               {selectedFileName && (
-                <span className="absolute -top-10 left-0 bg-gradient-to-r from-[#f0f4f8] to-[#e6e9ef] text-[#0a1930] text-base px-3 py-1 rounded-lg shadow-md max-w-[200px] truncate flex items-center gap-3 font-semibold">
+                <span className="absolute -top-10 left-0 bg-gradient-to-r from-[#f0f4f8] to-[#e6e9ef] text-[#0a1930] text-xs sm:text-sm px-3 py-1 rounded-lg shadow-md max-w-[200px] truncate flex items-center gap-2 font-semibold">
                   {selectedFileName}
                   <button
                     type="button"
@@ -583,33 +553,32 @@ export default function ChatBox() {
                 accept="image/*,application/pdf,.doc,.docx,.txt,.zip"
               />
             </div>
-
-            {/* Message Input */}
+  
             <input
               type="text"
               placeholder="Type your message..."
-              className="flex-1 bg-gradient-to-r from-[#f0f4f8]/80 to-[#e6e9ef]/80 text-[#0a1930] placeholder-gray-400 border border-[#e6e9ef]/50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#102841] outline-none shadow-sm transition-all hover:shadow-md text-sm font-medium"
+              className="flex-1 min-w-[200px] bg-[#f8fafc] text-[#0a1930] placeholder-gray-400 border border-[#dce3ed] rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#102841] outline-none shadow-sm transition-all text-sm font-medium"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !isSending && handleSend()}
+              onKeyDown={(e) => e.key === 'Enter' && !isSending && handleSend()}
             />
-
-            {/* Send Button */}
+  
             <button
               onClick={handleSend}
               disabled={isSending}
-              className="bg-gradient-to-br from-[#0a1930] to-[#102841] hover:from-[#102841] hover:to-[#1a3557] text-white px-5 py-3 rounded-xl shadow-lg transition-all transform hover:scale-105 disabled:opacity-50 cursor-pointer flex items-center gap-2 hover:shadow-md"
+              className="flex items-center gap-2 bg-[#0a1930] hover:bg-[#102841] text-white px-5 py-2 sm:py-3 rounded-xl shadow-md transition-transform transform hover:scale-105 disabled:opacity-50"
             >
               {isSending ? (
                 <Loader className="animate-spin w-5 h-5" />
               ) : (
                 <Send className="w-5 h-5" />
               )}
-              <span className="text-sm font-medium">Send</span>
+              <span className="text-sm font-semibold">Send</span>
             </button>
           </div>
         </main>
       </div>
     </div>
   );
+  
 }

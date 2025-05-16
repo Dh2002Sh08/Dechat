@@ -170,6 +170,7 @@ export default function InitUserProfilePage({ onSelectReceiver }: InitUserProfil
       toast.success(`Nickname updated for ${walletKey.toBase58().slice(0, 8)}...`);
       const nicknames = await fetchNicknameAndReceiverAddress(provider, publicKey);
       setChatContacts(nicknames);
+      setButtonLoading((prev) => ({ ...prev, saveNickname: false, addWallet: false }));
       if (wallet === targetWallet) {
         // setNickname(nickname);
       }
@@ -182,6 +183,7 @@ export default function InitUserProfilePage({ onSelectReceiver }: InitUserProfil
     } catch (err) {
       console.error('Set nickname error:', err);
       toast.error('Failed to update nickname');
+      setButtonLoading((prev) => ({ ...prev, saveNickname: false, addWallet: false }));
     }
   }, [provider, publicKey, targetWallet, checkAccountExists]);
 
@@ -202,9 +204,11 @@ export default function InitUserProfilePage({ onSelectReceiver }: InitUserProfil
       await initChat(provider, publicKey, recipient);
       toast.success('Chat initialized!');
       setIsChatInitialized(true);
+      setButtonLoading((prev) => ({ ...prev, initChat: false }));
     } catch (err) {
       console.error('Init chat error:', err);
       toast.error('Failed to initialize chat');
+      setButtonLoading((prev) => ({ ...prev, initChat: false }));
     } finally {
       // setIsInitializing(false);
     }
