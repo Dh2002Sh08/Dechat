@@ -28,13 +28,13 @@ export async function initChat(
     [Buffer.from('chat'), sender.toBuffer(), receiver.toBuffer()],
     PROGRAM_ID
   );
-  console.log('Chat PDA:', chatPda.toString());
+  // console.log('Chat PDA:', chatPda.toString());
 
   const [profilePda] = PublicKey.findProgramAddressSync(
     [Buffer.from('profile'), sender.toBuffer()],
     PROGRAM_ID
   );
-  console.log('Profile PDA:', profilePda.toString());
+  // console.log('Profile PDA:', profilePda.toString());
 
 
 
@@ -69,7 +69,7 @@ export async function initChat(
       maxRetries: 5,
       commitment: 'confirmed',
     });
-    console.log('InitChat Transaction ID:', signature);
+    // console.log('InitChat Transaction ID:', signature);
 
     // Verify transaction
     const confirmation = await connection.getSignatureStatus(signature);
@@ -77,7 +77,7 @@ export async function initChat(
       console.error('InitChat transaction failed:', confirmation.value.err);
       throw new Error(`InitChat transaction failed: ${confirmation.value.err}`);
     }
-    console.log('InitChat transaction confirmed:', signature);
+    // console.log('InitChat transaction confirmed:', signature);
     return signature;
   } catch (error: any) {
     console.error('InitChat error:', error);
@@ -101,16 +101,16 @@ export async function sendMessage(
     [Buffer.from('chat'), sender.toBuffer(), receiver.toBuffer()],
     PROGRAM_ID
   );
-  console.log('Chat PDA:', chatPda.toString());
-  console.log('IPFS Hash:', ipfsHash);
+  // console.log('Chat PDA:', chatPda.toString());
+  // console.log('IPFS Hash:', ipfsHash);
 
   // Check if chatAccount exists
   const chatAccountInfo = await connection.getAccountInfo(chatPda);
   if (!chatAccountInfo) {
-    console.log('Chat account not initialized, calling initChat...');
+    // console.log('Chat account not initialized, calling initChat...');
     await initChat(provider, sender, receiver);
   } else {
-    console.log('Chat account exists, proceeding with sendMessage.');
+    // console.log('Chat account exists, proceeding with sendMessage.');
   }
 
   // Create transaction with priority fee
@@ -145,7 +145,7 @@ export async function sendMessage(
       maxRetries: 5, // Retry up to 5 times
       commitment: 'confirmed',
     });
-    console.log('Transaction ID:', signature);
+    // console.log('Transaction ID:', signature);
 
     // Verify transaction
     const confirmation = await connection.getSignatureStatus(signature);
@@ -153,7 +153,7 @@ export async function sendMessage(
       console.error('Transaction failed:', confirmation.value.err);
       throw new Error(`Transaction failed: ${confirmation.value.err}`);
     }
-    console.log('Transaction confirmed:', signature);
+    // console.log('Transaction confirmed:', signature);
     return signature;
   } catch (error: any) {
     console.error('Send message error:', error);
@@ -175,7 +175,7 @@ export const fetchMessages = async (
     [Buffer.from('chat'), user.toBuffer(), recipient.toBuffer()],
     PROGRAM_ID
   )
-  console.log("Chat PDA:", chatPda.toString());
+  // console.log("Chat PDA:", chatPda.toString());
 
   const chatAccount = await program.account.chatAccount.fetch(chatPda);
 
@@ -201,7 +201,7 @@ export const fetchReceiverMessages = async (
     [Buffer.from('chat'), recipient.toBuffer(), user.toBuffer()],
     PROGRAM_ID
   );
-  console.log("Chat PDA:", chatPda.toString());
+  // console.log("Chat PDA:", chatPda.toString());
 
   const chatAccount = await program.account.chatAccount.fetch(chatPda);
 
@@ -247,13 +247,13 @@ export async function initUserProfile(
       systemProgram: SystemProgram.programId,
     })
     .rpc();
-  console.log('Transaction ID:', tx);
+  // console.log('Transaction ID:', tx);
   const confirmation = await provider.connection.getSignatureStatus(tx);
   if (confirmation?.value?.err) {
     console.error('Transaction failed:', confirmation.value.err);
     throw new Error(`Transaction failed: ${confirmation.value.err}`);
   }
-  console.log('Transaction confirmed:', tx);
+  // console.log('Transaction confirmed:', tx);
   return tx;
 }
 
@@ -276,13 +276,13 @@ export async function nickName(
       userProfile: profilePda,
     })
     .rpc();
-  console.log('Transaction ID:', tx);
+  // console.log('Transaction ID:', tx);
   const confirmation = await provider.connection.getSignatureStatus(tx);
   if (confirmation?.value?.err) {
     console.error('Transaction failed:', confirmation.value.err);
     throw new Error(`Transaction failed: ${confirmation.value.err}`);
   }
-  console.log('Transaction confirmed:', tx);
+  // console.log('Transaction confirmed:', tx);
   return tx;
 }
 
@@ -297,7 +297,7 @@ export async function fetchNicknameAndReceiverAddress(
       [Buffer.from('profile'), user.toBuffer()],
       PROGRAM_ID
     );
-    console.log('Profile PDA:', profilePda.toString());
+    // console.log('Profile PDA:', profilePda.toString());
 
     const profileAccount = await program.account.userProfile.fetchNullable(profilePda);
     
