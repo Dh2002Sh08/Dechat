@@ -5,7 +5,7 @@ import { PublicKey } from '@solana/web3.js';
 import { AnchorProvider, BN } from '@project-serum/anchor';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { uploadEncryptedJson, uploadChatMessage } from '@/pages/api/pinata';
+
 import { sendMessage, fetchMessages, fetchReceiverMessages } from '@/utils/useprogram';
 import { decryptMessage, encryptMessage } from '@/utils/crypto';
 import InitUserProfilePage from './wallet_Address';
@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import '@fontsource/fira-code';
 import Instructions from './intructions';
+import { uploadChatMessage, uploadEncryptedJson } from '@/utils/pinata';
 
 export default function ChatBox() {
   const [recipientKey, setRecipientKey] = useState('');
