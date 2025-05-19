@@ -1,7 +1,7 @@
 // utils/pinata.ts
 
 // You can store the token in an env variable during build
-const API_SECRET_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
+const API_SECRET_TOKEN = process.env.API_TOKEN;
 
 // ✅ Upload a file to your secure API
 export const uploadToPinata = async (file: File): Promise<string> => {
@@ -34,12 +34,14 @@ export const uploadToPinata = async (file: File): Promise<string> => {
 export const uploadChatMessage = async ({
   sender,
   receiver,
-  message,
+  nonce,
+  content,
   imageFile,
 }: {
   sender: string;
   receiver: string;
-  message: string;
+  nonce: string;
+  content: string;
   imageFile?: File;
 }): Promise<string> => {
   try {
@@ -52,7 +54,8 @@ export const uploadChatMessage = async ({
     const metadata = {
       sender,
       receiver,
-      message,
+      nonce,
+      content,
       image: imageUrl || null,
       timestamp: new Date().toISOString(),
     };

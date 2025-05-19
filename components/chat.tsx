@@ -117,19 +117,23 @@ export default function ChatBox() {
     }
     setIsSending(true);
     try {
+      // refusal
       const recipient = new PublicKey(recipientKey);
       let ipfsUrl: string;
+
+      const messageToEncrypt = message.trim() || 'File attachment';
+      const encrypted = await encryptMessage(messageToEncrypt, 'chat-secret');
 
       if (message.trim() || file) {
         ipfsUrl = await uploadChatMessage({
           sender: publicKey.toString(),
           receiver: recipientKey,
-          message: message.trim() || 'File attachment',
+          nonce: encrypted.nonce, // Add nonce
+          content: encrypted.content, // Store content separately
           imageFile: file || undefined,
         });
         showNotification('Message and/or file uploaded to IPFS', 'info');
       } else {
-        const encrypted = await encryptMessage('Empty message', 'chat-secret');
         ipfsUrl = await uploadEncryptedJson(encrypted);
       }
 
@@ -178,14 +182,26 @@ export default function ChatBox() {
               const response = await fetch(`https://ipfs.io/ipfs/${ipfsUrl}`);
               if (!response.ok) throw new Error(`IPFS fetch failed: ${response.statusText}`);
               messageData = await response.json();
+              console.log('Sent message data:', messageData); // Debug log
             } catch (e) {
               console.error('IPFS fetch error:', e);
               return { text: '[Failed to fetch message]', isSender: true, timestamp };
             }
             if (messageData.nonce && messageData.content) {
-              const plainText = await decryptMessage(messageData, passphrase);
-              return { text: plainText, isSender: true, timestamp };
+              try {
+                const plainText = await decryptMessage(messageData, passphrase);
+                return {
+                  text: plainText,
+                  isSender: true,
+                  timestamp,
+                  image: messageData.image ? `https://ipfs.io/ipfs/${messageData.image}` : undefined,
+                };
+              } catch (e) {
+                console.error('Decryption failed for sent message:', e, messageData);
+                return { text: '[Decryption Failed]', isSender: true, timestamp };
+              }
             } else if (messageData.message) {
+              console.warn('Message not encrypted, displaying raw:', messageData.message);
               return {
                 text: messageData.message,
                 isSender: true,
@@ -215,14 +231,21 @@ export default function ChatBox() {
               const response = await fetch(`https://ipfs.io/ipfs/${ipfsUrl}`);
               if (!response.ok) throw new Error(`IPFS fetch failed: ${response.statusText}`);
               messageData = await response.json();
+              console.log('Received message data:', messageData); // Debug log
             } catch (e) {
               console.error('IPFS fetch error:', e);
               return { text: '[Failed to fetch message]', isSender: false, timestamp };
             }
             if (messageData.nonce && messageData.content) {
-              const plainText = await decryptMessage(messageData, passphrase);
-              return { text: plainText, isSender: false, timestamp };
+              try {
+                const plainText = await decryptMessage(messageData, passphrase);
+                return { text: plainText, isSender: false, timestamp };
+              } catch (e) {
+                console.error('Decryption failed for received message:', e, messageData);
+                return { text: '[Decryption Failed]', isSender: false, timestamp };
+              }
             } else if (messageData.message) {
+              console.warn('Message not encrypted, displaying raw:', messageData.message);
               return {
                 text: messageData.message,
                 isSender: false,
@@ -231,7 +254,7 @@ export default function ChatBox() {
               };
             } else {
               console.error('Invalid message format for received message:', messageData);
-              return { text: '[("""Invalid message format]', isSender: false, timestamp };
+              return { text: '[Invalid message format]', isSender: false, timestamp };
             }
           } catch (e) {
             console.error('Received message processing error:', e);
@@ -401,7 +424,7 @@ export default function ChatBox() {
           }
         }
       `}</style>
-  
+
       {/* Notifications */}
       <div className="fixed top-4 right-4 z-[1000] flex flex-col gap-3 w-full max-w-xs sm:max-w-sm md:max-w-md">
         {notifications.map((notification) => (
@@ -415,10 +438,10 @@ export default function ChatBox() {
           />
         ))}
       </div>
-  
+
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%230a1930%22 fill-opacity=%220.05%22%3E%3Cpath d=%22M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30v4h-4v2h4v4h2v-4h4V8h-4V4h-2zm-12 8h-2v4h-4v2h4v4h2v-4h4v-2h-4v-4zm-6 22h4v-4h2v4h4v2h-4v4h-2v-4H8v-2h4v-4z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] bg-repeat z-0" />
-  
+
       {/* Instructions Modal */}
       {showInstructions && (
         <div className="fixed inset-0 z-[1000] bg-black/40 flex items-center justify-center px-4">
@@ -438,7 +461,7 @@ export default function ChatBox() {
           </div>
         </div>
       )}
-  
+
       {/* Main Layout */}
       <div className="relative z-10 flex flex-col md:flex-row h-screen pt-20 md:pt-0">
         {/* Sidebar */}
@@ -457,7 +480,7 @@ export default function ChatBox() {
           </div>
           <InitUserProfilePage onSelectReceiver={handleSelectReceiver} />
         </aside>
-  
+
         {/* Main Chat Area */}
         <main className="flex-1 flex flex-col bg-white/80 backdrop-blur-md shadow-inner">
           {/* Header */}
@@ -470,14 +493,14 @@ export default function ChatBox() {
               <WalletMultiButton className="!bg-gradient-to-br !from-[#0a1930] !to-[#102841] hover:!from-[#102841] hover:!to-[#1a3557] !text-white !rounded-xl !px-4 sm:!px-6 !py-2 sm:!py-3 transition-all transform hover:scale-105 !shadow-md" />
             </div>
           </div>
-  
+
           {/* Recipient */}
           <div className="px-4 sm:px-6 py-3 border-b border-[#e6e9ef]/50">
             <p className="w-full bg-gradient-to-r from-[#f0f4f8]/80 to-[#e6e9ef]/80 text-[#0a1930] border border-[#e6e9ef]/50 rounded-xl px-4 py-2 sm:py-3 shadow-sm truncate font-medium text-sm transition-all hover:shadow-md">
               {recipientKey || 'Select a recipient to start chatting'}
             </p>
           </div>
-  
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 animate-fade-in">
             {messages.length === 0 ? (
@@ -521,7 +544,7 @@ export default function ChatBox() {
             )}
             <div ref={messagesEndRef} />
           </div>
-  
+
           {/* Input Section */}
           <div className="flex flex-wrap gap-3 items-center px-4 sm:px-6 py-4 border-t border-[#e6e9ef]/50 bg-gradient-to-t from-white/95 to-[#f0f4f8]/95 shadow-inner">
             <div className="relative group">
@@ -554,7 +577,7 @@ export default function ChatBox() {
                 accept="image/*,application/pdf,.doc,.docx,.txt,.zip"
               />
             </div>
-  
+
             <input
               type="text"
               placeholder="Type your message..."
@@ -563,7 +586,7 @@ export default function ChatBox() {
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !isSending && handleSend()}
             />
-  
+
             <button
               onClick={handleSend}
               disabled={isSending}
@@ -581,5 +604,5 @@ export default function ChatBox() {
       </div>
     </div>
   );
-  
+
 }
